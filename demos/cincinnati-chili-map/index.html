@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+
+    <title>Cincinnati Chili Map</title>
+
+    <link rel='stylesheet' type='text/css' href='styles/index.css'>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <script src='scripts/config.js'></script>
+    <script>
+        const {
+            CityStyles,
+            DefaultCoordinates,
+            MapStyles,
+            PopulationOptions,
+            Radius, 
+            SearchKeywords
+        } = window.Config;
+
+        function initMap() {
+            const places = [{
+                name: 'home',
+                geometry: {
+                    location: DefaultCoordinates.Home
+                }
+            }]; 
+
+            const mapEl = document.getElementById('map');
+
+            const infowindow = new google.maps.InfoWindow();
+
+            const PlacesService = new google.maps.places.PlacesService(map);
+
+            function createMarkerLabel({name}) {
+                let color = 'red';
+                let text = String.fromCodePoint(0x1F47D);
+
+                name = name.toLowerCase();
+                if (name.includes('gol')) {
+                    color = 'sienna';
+                    text =  String.fromCodePoint(0x1F31F);
+                } else if (name.includes('sky')) {
+                    color = 'slateblue'
+                    text = String.fromCharCode(0x26C5);
+                    // text = String.fromCodePoint(0x1F306);
+                } else if (name.includes('home')) {
+                    color = 'purple';
+                    text = String.fromCodePoint(0x1F3E0);
+                } else if (name.includes('mcd')) {
+                    color = 'goldenrod';
+                    text = String.fromCodePoint(0x1F35F);
+                    // text = String.fromCodePoint(0x24C2);
+                } else if (name.includes('bur')) {
+                    color = 'brown';
+                    text = String.fromCodePoint(0x1F354);
+                }
+
+                return { color, text, fontSize: '15px' };
+            }
+
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; --i) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            const searchFinishSet = new Set();
+
+            mapEl.addEventListener('searchFinishEvent', evt => {
+                if (!evt.detail) return;
+
+                if (evt.detail.size >= SearchKeywords.length) {
+                    const bounds = new google.maps.LatLngBounds();
+                    bounds.extend(DefaultCoordinates.Cincinnati);
+
+                    places.forEach(place => bounds.extend(place.geometry.location));
+
+                    const map = new google.maps.Map(mapEl, {
+                        center: bounds.getCenter(),
+                        zoom: 13,
+                        styles: MapStyles
+                    });
+
+                    map.setCenter(bounds.getCenter());
+                    map.fitBounds(bounds);
+                    map.setZoom(map.getZoom() - 1);
+
+                    const cityBox = new google.maps.Rectangle(Object.assign(CityStyles, { 
+                        map: map,
+                        bounds: bounds
+                    }));
+
+                    function createMarker(place) {
+                        setTimeout(() => {
+                            const marker = new google.maps.Marker({
+                                map: map,
+                                position: place.geometry.location,
+                                title: place.name,
+                                icon: {
+                                    fillColor: '#ffffff',
+                                    fillOpacity: 1,
+                                    path: google.maps.SymbolPath.CIRCLE,
+                                    scale: 12,
+                                    strokeColor: '#333333',
+                                    strokeWeight: 1
+                                },
+                                label: createMarkerLabel(place)
+                            });
+
+                            google.maps.event.addListener(marker, 'click', function () {
+                                infowindow.setContent(place.name);
+                                infowindow.open(map, this);
+                            });
+                        }, 1000);
+                    }
+
+                    const counts = {};
+                    shuffleArray(places).forEach(place => {
+                        if (!counts[place.name]) {
+                            counts[place.name] = 0;
+                        }
+                        counts[place.name] = counts[place.name] + 1;
+                        createMarker(place);
+                    });
+                    delete counts.home;
+
+                    let contentString = '<div><h3>Chili</h3>';
+                    let burgerString = '<h3>Burger</h3>';
+                    Object.keys(counts).map(key => {
+                        if (key.includes('Gol') || key.includes('Sky')) {
+                            contentString += `<p>${createMarkerLabel({ name: key }).text} ${key} : ${counts[key]}</p>`;
+                        } else {
+                            burgerString +=`<p>${createMarkerLabel({ name: key }).text} ${key} : ${counts[key]}</p>`;
+                        }
+                    });
+                    contentString += burgerString;
+                    contentString += '</div>';
+
+                    const marker = new google.maps.Marker({
+                        position: DefaultCoordinates.Cincinnati,
+                        map: map,
+                        label: '?'
+                    });
+                    const dataInfowindow = new google.maps.InfoWindow({
+                        content: contentString,
+                        maxWidth: 250,
+                        zIndex: 10
+                    });
+                    dataInfowindow.open(map, marker);
+                    marker.addListener('click', () => {
+                        dataInfowindow.open(map, marker);
+                    });
+                }
+            });
+
+            SearchKeywords.forEach((searchKeyword, idx) => {
+                setTimeout(() => {
+                    PlacesService.nearbySearch({
+                        location: DefaultCoordinates.Cincinnati, 
+                        radius: Radius, 
+                        keyword: searchKeyword, 
+                        type: ['restaurant']
+                    }, (results, status, pagination) => {
+                        if (status !== 'OK') {
+                            return console.error('Places Services status error', status);
+                        } else {
+                            results.forEach(({geometry, name}) => {
+                                places.push({ name, geometry });
+                            });
+                                
+                            if (pagination.hasNextPage) {
+                                setTimeout(() => pagination.nextPage(), 1000);
+                            } else {
+                                mapEl.dispatchEvent(new CustomEvent('searchFinishEvent', { 
+                                    detail: searchFinishSet.add(idx + 1)
+                                }));
+                            }
+                        }
+                    });
+                }, 0);
+            });
+        }
+    </script>
+    <script src='https://maps.googleapis.com/maps/api/js?key=AIzaSyCG9S_Lc9CWi12bYAoMEZgt5TrMZKe52Ac&callback=initMap&libraries=places' async defer></script>
+  </body>
+</html>
