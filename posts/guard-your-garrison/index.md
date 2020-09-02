@@ -5,6 +5,7 @@
   <source src="https://github.com/franvarney/franvarney.github.io/blob/master/media/guard_your_garrison.webm?raw=true"></source>
 </video>
 
+
 Here is a game that I made to learn Unity and more about game development in general. Guard Your Garrison is strongly inspired by (read: a clone) Defend Your Castle, which was a Flash game I used to play in middle school. [XGen Studios](http://www.xgenstudios.com/) is actually still working on this game after all this time.
 
 Besides growing up playing this game, I felt Defend Your Castle was a reasonable game to clone scope-wise and would help me focus on how to actually make games while also being able to complete the project. Having some C# experience and using Unity really made this a lot easier, but of course, a lot of research had to be done on things like quaternions and colliders and kinematics.
@@ -21,10 +22,10 @@ Play the game [here!](https://franvarney.github.io/games/guard-your-garrison)
 
 #### Assets
 
-- [5 RPG Characters - Evil](https://assetstore.unity.com/packages/2d/characters/5-rgp-characters-evil-96737)  by HQ Game Assets
+- [5 RPG Characters - Evil](https://assetstore.unity.com/packages/2d/characters/5-rgp-characters-evil-96737) by HQ Game Assets
 - [2D Cartoon Castles](https://assetstore.unity.com/packages/2d/environments/2d-cartoon-castles-42750) by QotoQot
 - [Tower 2D Sprite Pack](https://assetstore.unity.com/packages/2d/environments/tower-2d-sprite-pack-71771) by StetsRoman
 - [2D Sky](https://assetstore.unity.com/packages/tools/particles-effects/2d-sky-free-21555)  by G.E.TeamDev
 - [Toon FX](https://assetstore.unity.com/packages/vfx/particles/toon-fx-25601) by Kenneth "Archanor" Foldal Moe
 - [Luckiest Guy Font](https://fonts.google.com/specimen/Luckiest+Guy)
-- UI designed by me and my boyfriend, made by me
+- UI designed by Justin Oronos and I, made by me
