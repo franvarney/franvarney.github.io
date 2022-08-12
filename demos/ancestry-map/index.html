@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+        <title>Ancestry Map</title>
+
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="" />
+        
+        <script src="https://unpkg.com/vue@3"></script>
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+
+        <style>
+            html,
+            body, 
+            #app {
+                height: 100%;
+                margin: 0; 
+                padding: 0; 
+                width: 100%;
+            }
+            #map { 
+                /* position: absolute; 
+                top: 0; 
+                bottom: 0;  */
+                width: 100%; 
+            }
+            .marker {
+                display: block;
+                border: none;
+                border-radius: 50%;
+                cursor: pointer;
+                padding: 0;
+            }
+            #buttons {
+                height: 15%;
+                margin: 15px;
+            }
+            .btn-country {
+                font-size: 18px;
+                margin-right: 10px;
+                padding: 10px;
+            }
+        </style>
+    </head>
+
+    <body>
+
+        <div id="app">
+            <div ref="map" id="map" style="width: 100%; height: 85%"></div>
+            <section id="buttons">
+                <button ref="btnHR" class="btn-country" id="HR" @click="viewCountry">🇭🇷 Croatia</button>
+                <button ref="btnSK" class="btn-country" id="SK" @click="viewCountry">🇸🇰 Slovakia</button>
+            </section>
+        </div>
+
+    </body>
+
+    <script>
+        const Countries = {
+            HR: 'HR',
+            SK: 'SK'
+        };
+
+        const TOKEN = 'pk.eyJ1Ijoic2lsZW50ZGlzdHJhY3Rpb25zIiwiYSI6ImNrbW42YmtyYzB2YmIyb3BsOWd6NHk5ZDUifQ._-qm393P0ptRX2Ler03l5Q';
+        const COUNTRY = Countries.HR;
+        const DOT = 'dot.png';
+        const HOUSE = 'house.png';
+
+        const tileUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}';
+        const tileLayerOpts = {
+            accessToken: TOKEN,
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            id: 'mapbox/light-v10',
+            maxZoom: 10,
+            tileSize: 512,
+            zoomOffset: -1
+        };
+
+        const { createApp } = Vue;
+      
+        const app = createApp({
+            mounted() {
+                const mapFactory = factory(L);
+                const center = mapFactory.getCountryLatLngBounds(COUNTRY).getCenter();
+                const map = this.map = L.map(this.$refs.map).setView(center, 13);
+                mapFactory.getAllIcons().forEach(([coords, icon]) => L.marker(coords, { icon }).addTo(map));
+                L.tileLayer(tileUrl, tileLayerOpts).addTo(map);
+            },
+            methods: {
+                viewCountry(event) {
+                    const mapFactory = factory(L);
+                    const latlng = mapFactory.getCountryLatLngBounds(Countries[event.currentTarget.id]);
+                    this.map.flyTo(latlng.getCenter());
+                }
+            },
+            data() {
+                return {
+                    
+                };
+            }
+        });
+
+        app.config.errorHandler = (err) => {
+            console.error('Error', err);
+        };
+
+        app.mount('#app');
+
+        function factory(l) {
+
+            const dots = [
+                [[45.528856762216364, 17.8784261490104], DOT, 'HR'], // Orahovica
+                [[45.55405997460395, 18.692283216990354], DOT, 'HR'], // Osijek
+                [[45.662091661412866, 17.7648916415838], DOT, 'HR'], // Nova Bukovica
+                [[45.661517413379364, 17.824047639300098], DOT, 'HR'], // Miljevci
+                [[45.3373790168538, 17.672363831876623], DOT, 'HR'], // Pozega
+                [[45.50081920966611, 18.12004525846146], DOT, 'HR'], // Nasice, Markovac
+                [[45.4259505151811, 18.41036328759092], DOT, 'HR'], // Punitovci, Josipovac
+                [[45.425603538191396, 17.883162334207224], DOT, 'HR'], // Kutjevo
+                [[45.38640449247134, 17.82728656015639], DOT, 'HR'], // Kutjevo, Tominovac
+
+                [[49.36579918009704, 19.05273414637353], DOT, 'SK'], // Nova Bystrica, Vychylovka 
+                [[49.32581436527815, 19.07702156094178], DOT, 'SK'], // Nova Bystrica, Riecnica
+                [[49.325984771931466, 18.93924689973061], DOT, 'SK'], // Stara Bystrica, Radostka
+            ];
+
+            const houses = [
+                [[45.55, 18.45], HOUSE, 'HR'], // Bizovac, Brodanci
+                [[45.51149735048656, 18.062687387610225], HOUSE, 'HR'], // Nasice, Breznica
+                [[45.533333, 18.15], HOUSE, 'HR'], // Nasice, Jelisavac
+                [[45.433333, 18.45], HOUSE, 'HR'], // Punitovci, Jurjevac
+                [[45.64849755094614, 17.977160306656085], HOUSE, 'HR'], // Crnac, Petrovo Polje
+
+                [[49.35, 18.9], HOUSE, 'SK'], // Stara Bystrica, Klubina
+                [[49.233333, 19.466667], HOUSE, 'SK'], // Sedliacka Dubova, Chlebnice
+            ];
+
+            const coats = [
+                [[45.59241640094543, 18.459146416175678], 'hr_bizovac.png', 'HR'],
+                [[45.516667, 18.566667], 'hr_cepin.png', 'HR'],
+                [[45.696111, 17.936944], 'hr_crnac.png', 'HR'],
+                [[45.31, 18.41], 'hr_djakovo.png', 'HR'],
+                [[45.761, 18.165], 'hr_donji-miholjac.png', 'HR'],
+                [[45.49675238316784, 17.93680874114473], 'hr_kutjevo.png', 'HR'],
+                [[45.49, 18.09], 'hr_nasice.png', 'HR'],
+                [[45.433333, 18.416667], 'hr_punitovci.png', 'HR'],
+
+                [[49.35, 19.016667], 'sk_nova-bystrica.png', 'SK'],
+                [[49.266667, 19.433333], 'sk_sedliacka-dubova.png', 'SK'],
+                [[49.35, 18.95], 'sk_stara-bystrica.png', 'SK'],
+                [[49.275, 19.15], 'sk_zazriva.png', 'SK'],
+            ];
+
+            function configIcon(size, offset) {
+                return L.Icon.extend({
+                    options: {
+                        iconSize: [size],
+                        zIndexOffset: offset
+                    }
+                });
+            }
+            function addIcons(data, Icon) {
+                return data.map(([coords, filename]) => {
+                    const icon = new Icon({
+                        iconUrl: `./icons/${filename}`
+                    });
+                    return [coords, icon];
+                });
+            }
+            const CoatIcon = configIcon(30, 1000);
+            const DotIcon = configIcon(12, 300);
+            const HouseIcon = configIcon(24, 600);
+            function getAllIcons() {
+                return [
+                    ...addIcons(coats, CoatIcon),
+                    ...addIcons(dots, DotIcon),
+                    ...addIcons(houses, HouseIcon)
+                ];
+            }
+
+            const allIcons = [...dots, ...houses, ...coats];
+            const getCountryIcons = (selectedCountry='') => (
+                allIcons.filter(([,, country]) => country === selectedCountry)
+            );
+            const getCountryCoords = (countryIcons=[]) => (
+                countryIcons.map(([coords]) => coords)
+            );
+            const getLatLngBounds = (coords) => l.latLngBounds(coords);
+            const getCountryLatLngBounds = (selectedCountry) => {
+                const icons = getCountryIcons(selectedCountry);
+                const coords = getCountryCoords(icons);
+                return getLatLngBounds(coords);
+            };
+
+            return {
+                getAllIcons,
+                getCountryLatLngBounds
+            };
+        }
+    </script>
+</html>
